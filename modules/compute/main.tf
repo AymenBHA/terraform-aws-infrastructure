@@ -33,8 +33,8 @@ resource "aws_security_group" "web" {
 
 
 resource "aws_instance" "web" {
-  ami           = "ami-0c7217cdde317cfec"
-  instance_type = "t2.micro"
+  ami           = "ami-02b64aa047cb5edf5"
+  instance_type = "t3.micro"
 
   subnet_id = var.public_subnet_id
 
