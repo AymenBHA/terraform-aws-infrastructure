@@ -1,5 +1,14 @@
-aws_region
+variable "aws_region" {
+  description = "AWS region where resources will be created"
+  type        = string
+}
 
-project_name
+variable "project_name" {
+  description = "Project name used for tagging resources"
+  type        = string
+}
 
-vpc_cidr
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
