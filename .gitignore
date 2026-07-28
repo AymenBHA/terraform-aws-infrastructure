@@ -9,10 +9,10 @@ override.tf.json
 *_override.tf.json
 
 # Terraform variable files
-#for learning reaseans i m putting this in comment  *.auto.tfvars
+*.auto.tfvars
 
 # Sensitive files
-terraform.tfvars
+# commented for learning reasons by default do not share this file avery sensitive data should be protected  terraform.tfvars
 
 # Plan files
 *.tfplan
