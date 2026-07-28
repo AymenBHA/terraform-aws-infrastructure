@@ -4,7 +4,7 @@ A production-style AWS infrastructure project built with Terraform.
 
 ## Goals
 
-- Learn Terraform through a real project
+
 - Build reusable modules
 - Deploy infrastructure on AWS
 - Follow production-style project structure
