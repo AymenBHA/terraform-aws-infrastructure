@@ -1,3 +1,9 @@
-project_name
+variable "project_name" {
+  description = "Project name used for tagging resources"
+  type        = string
+}
 
-vpc_cidr
+variable "vpc_cidr" {
+  description = "CIDR block of the VPC"
+  type        = string
+}

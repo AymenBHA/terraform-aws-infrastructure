@@ -9,7 +9,7 @@ override.tf.json
 *_override.tf.json
 
 # Terraform variable files
-*.auto.tfvars
+#for learning reaseans i m putting this in comment  *.auto.tfvars
 
 # Sensitive files
 terraform.tfvars
