@@ -12,3 +12,8 @@ variable "public_subnet_id" {
   description = "Public subnet where EC2 will run"
   type        = string
 }
+
+variable "public_key_path" {
+  description = "Path to the SSH public key"
+  type        = string
+}

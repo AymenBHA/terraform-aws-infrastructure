@@ -31,12 +31,16 @@ resource "aws_security_group" "web" {
   }
 }
 
+resource "aws_key_pair" "ansible" {
+  key_name   = "ansible-key"
+  public_key = file(pathexpand(var.public_key_path))
+}
 
 resource "aws_instance" "web" {
   ami           = "ami-02b64aa047cb5edf5"
   instance_type = "t3.micro"
-
-  subnet_id = var.public_subnet_id
+  key_name      = aws_key_pair.ansible.key_name
+  subnet_id     = var.public_subnet_id
 
   vpc_security_group_ids = [
     aws_security_group.web.id
@@ -48,3 +52,4 @@ resource "aws_instance" "web" {
     Name = "${var.project_name}-server"
   }
 }
+
