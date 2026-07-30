@@ -1,9 +1,14 @@
-
 ---
 - name: Install nginx
   dnf:
     name: nginx
     state: present
+
+- name: Deploy nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: Restart nginx
 
 - name: Start nginx
   service:

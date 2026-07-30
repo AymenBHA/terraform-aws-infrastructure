@@ -1,2 +1,5 @@
 ---
 # vars file for roles/nginx
+nginx_port: 80
+server_name: devspace.local
+web_root: /usr/share/nginx/html
