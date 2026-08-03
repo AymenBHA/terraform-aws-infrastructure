@@ -6,21 +6,60 @@ echo "🚀 Starting DevSpace deployment"
 
 REPO_ROOT=$(pwd)
 
-TERRAFORM_DIR="$REPO_ROOT/terraform"
+TERRAFORM_DIR="$REPO_ROOT"
 ANSIBLE_DIR="$REPO_ROOT/ansible"
 
 SSH_KEY="$HOME/.ssh/id_rsa"
 
 
-echo "🔍 Checking dependencies"
+#################################
+# Install dependencies
+#################################
 
-for cmd in terraform ansible git; do
-    if ! command -v $cmd >/dev/null 2>&1; then
-        echo "❌ $cmd is missing"
-        exit 1
-    fi
-done
+echo "🔍 Checking dependencies..."
 
+
+# Git
+if ! command -v git >/dev/null 2>&1; then
+    echo "📦 Installing Git..."
+    sudo dnf install git -y
+else
+    echo "✅ Git already installed"
+fi
+
+
+# Terraform
+if ! command -v terraform >/dev/null 2>&1; then
+
+    echo "📦 Installing Terraform..."
+
+    sudo dnf install -y yum-utils
+
+    sudo yum-config-manager \
+    --add-repo \
+    https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+
+    sudo dnf install terraform -y
+
+else
+    echo "✅ Terraform already installed"
+fi
+
+
+
+# Ansible
+if ! command -v ansible >/dev/null 2>&1; then
+
+    echo "📦 Installing Ansible..."
+
+    sudo dnf install ansible -y
+
+else
+    echo "✅ Ansible already installed"
+fi
+
+
+echo "✅ All dependencies ready"
 
 echo "🔑 Checking SSH key"
 
@@ -60,7 +99,7 @@ terraform apply -auto-approve
 
 echo "📡 Getting EC2 IP"
 
-WEB_IP=$(terraform output -raw web_public_ip)
+WEB_IP=$(terraform output -raw public_ip)
 
 echo "EC2 IP: $WEB_IP"
 
