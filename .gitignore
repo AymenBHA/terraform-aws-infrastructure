@@ -2,25 +2,18 @@
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
-crash.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
 
-# Terraform variable files containing secrets (if you ever use them)
-*.auto.tfvars
-#terraform.tfvars
-
-# Ansible
-*.retry
-
-# SSH Keys
+# SSH keys
 *.pem
 id_rsa
 id_rsa.pub
+.ssh/
 
-# OS files
-.DS_Store
-Thumbs.db
+# Ansible generated inventory
+ansible/inventory.ini
+
+# Secrets
+.env
+
+# AWS credentials
+.aws/
