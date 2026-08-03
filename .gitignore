@@ -2,27 +2,25 @@
 .terraform/
 *.tfstate
 *.tfstate.*
+.terraform.lock.hcl
 crash.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Terraform variable files
+# Terraform variable files containing secrets (if you ever use them)
 *.auto.tfvars
+#terraform.tfvars
 
-# Sensitive files
-# commented for learning reasons by default do not share this file avery sensitive data should be protected  terraform.tfvars
+# Ansible
+*.retry
 
-# Plan files
-*.tfplan
+# SSH Keys
+*.pem
+id_rsa
+id_rsa.pub
 
-# IDE
-.vscode/
-.idea/
-
-# macOS
+# OS files
 .DS_Store
-
-# Windows
 Thumbs.db

@@ -15,3 +15,11 @@
     name: nginx
     state: started
     enabled: yes
+
+- name: Deploy website
+  template:
+    src: index.html.j2
+    dest: "{{ web_root }}/index.html"
+    owner: root
+    group: root
+    mode: '0644'
