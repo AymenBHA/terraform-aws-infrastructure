@@ -123,8 +123,8 @@ ansible-playbook \
 playbook.yml
 
 
-echo "📝 Checking Git changes"
 
+echo "📝 Checking Git changes"
 
 cd "$REPO_ROOT"
 
@@ -135,10 +135,12 @@ else
 
     git status
 
-    git commit -m "Update project"
+    echo
+    read -p "Commit message: " MESSAGE
+
+    git commit -m "$MESSAGE"
 
     echo
-
     read -p "Push to GitHub? (y/N): " PUSH_CHOICE
 
     if [[ "$PUSH_CHOICE" =~ ^[Yy]$ ]]; then
