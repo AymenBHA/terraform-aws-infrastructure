@@ -123,24 +123,31 @@ ansible-playbook \
 playbook.yml
 
 
+echo "📝 Checking Git changes"
 
-echo "📝 Git commit"
 
 cd "$REPO_ROOT"
 
-git add .
+if git diff --quiet && git diff --cached --quiet; then
+    echo "ℹ️ No changes to commit."
+else
+    git add .
 
-git status
+    git status
 
+    git commit -m "Update project"
 
-read -p "Commit message: " MESSAGE
+    echo
 
-git commit -m "$MESSAGE"
+    read -p "Push to GitHub? (y/N): " PUSH_CHOICE
 
-
-echo "🚀 Push to GitHub"
-
-git push -u origin main
-
+    if [[ "$PUSH_CHOICE" =~ ^[Yy]$ ]]; then
+        echo "🚀 Pushing to GitHub..."
+        git push -u origin main
+        echo "✅ Changes pushed successfully."
+    else
+        echo "ℹ️ Push skipped. Changes are committed locally."
+    fi
+fi
 
 echo "✅ Finished"
