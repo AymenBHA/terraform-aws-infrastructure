@@ -1,4 +1,11 @@
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
