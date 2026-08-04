@@ -633,16 +633,3 @@ ansible-playbook playbook.yml -v
 
 ---
 
-# Lessons Learned
-
-This project improved understanding of:
-
-- Reading error messages
-- Debugging Linux services
-- Terraform state management
-- AWS networking
-- Ansible troubleshooting
-- Infrastructure drift
-- Automation reliability
-
-Real DevOps work is not only writing automation, but also understanding why systems fail and how to recover them.
