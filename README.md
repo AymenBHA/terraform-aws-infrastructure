@@ -1,275 +1,449 @@
-# Terraform AWS Infrastructure
+# Terraform AWS Infrastructure + Ansible Deployment
 
-A production-style AWS infrastructure project built with Terraform.
+## Overview
 
-##
+This project automates the provisioning and configuration of an AWS web server environment using **Terraform** and **Ansible**.
 
+The workflow creates AWS infrastructure, configures an EC2 instance, installs and configures Nginx, and deploys a web page automatically.
 
-
-# Terraform Remote State Setup (S3 + DynamoDB)
-
-## Objective
-
-Configure Terraform remote state using AWS S3 and DynamoDB.
-
-This setup provides:
-
-* Centralized Terraform state storage.
-* State sharing between engineers.
-* State locking to prevent concurrent Terraform operations.
-* State version history and recovery.
+The complete deployment process is automated using a Bash deployment script.
 
 ---
 
-# 1. Create S3 Bucket for Terraform State
+# Architecture
 
-Terraform stores the infrastructure state file inside an S3 bucket.
+```text
+Developer
+    |
+    |
+ setup.sh
+    |
+    +----------------+
+    |                |
+Terraform         Ansible
+    |                |
+    |                |
+AWS Infrastructure  Server Configuration
+    |
+    |
+EC2 Instance
+    |
+    |
+Nginx Web Server
+    |
+    |
+Website Deployment
+```
+
+---
+
+# Technologies Used
+
+## Infrastructure
+
+- AWS
+- Terraform
+- Terraform Modules
+- Amazon S3 Remote Backend
+- DynamoDB State Locking
+
+## Configuration Management
+
+- Ansible
+- Ansible Roles
+- Jinja2 Templates
+- Ansible Handlers
+
+## Automation
+
+- Bash scripting
+- Git
+
+---
+
+# Project Workflow
+
+The deployment follows this workflow:
+
+```text
+Run setup.sh
+
+        |
+        v
+
+Terraform
+
+        |
+        |
+        +--> Create AWS Infrastructure
+        |
+        +--> Store state remotely in S3
+        |
+        +--> Lock state using DynamoDB
+
+        |
+        v
+
+Generate EC2 inventory automatically
+
+        |
+        v
+
+Ansible
+
+        |
+        |
+        +--> Install Nginx
+        |
+        +--> Configure Nginx
+        |
+        +--> Deploy Website
+
+        |
+        v
+
+Running Web Server
+```
+
+---
+
+# Infrastructure Created
+
+Terraform provisions the following AWS resources:
+
+- VPC
+- Public Subnets
+- Internet Gateway
+- Route Table
+- Route Table Associations
+- Security Group
+- EC2 Instance
+- SSH Key Pair
+
+
+The infrastructure is organized using Terraform modules:
+
+```text
+modules/
+
+├── network
+│   ├── VPC
+│   ├── Subnets
+│   ├── Internet Gateway
+│   └── Route Tables
+│
+└── compute
+    ├── EC2 Instance
+    └── Security Group
+```
+
+---
+
+# Terraform Implementation
+
+The project follows Terraform best practices.
+
+## Modules
+
+Infrastructure is separated into reusable modules:
+
+```text
+modules/
+
+├── network
+└── compute
+```
+
+Benefits:
+
+- Better organization
+- Reusable infrastructure components
+- Easier maintenance
+
+
+## Variables
+
+Infrastructure values are managed using Terraform variables.
+
+Examples:
+
+- AWS region
+- VPC CIDR
+- Instance type
+- Project name
+
+
+## Outputs
+
+Terraform outputs important information:
 
 Example:
 
+```text
+instance_id
+public_ip
+public_dns
 ```
+
+The public IP output is automatically used by the deployment script to generate the Ansible inventory.
+
+---
+
+# Remote State Management
+
+Terraform state is stored remotely.
+
+## Amazon S3
+
+Used for:
+
+- Storing terraform.tfstate
+- Sharing state between engineers
+- Keeping state history using versioning
+
+
+Example:
+
+```text
 devspace-aymen-terraform-state
 ```
 
-The state file:
-
-```
-terraform.tfstate
-```
-
-will be stored remotely instead of locally.
-
 ---
 
-## Create S3 Bucket
+## DynamoDB
 
-```bash
-aws s3 mb s3://devspace-aymen-terraform-state \
---region us-east-1
-```
+Used for:
 
----
+- Terraform state locking
+- Preventing simultaneous Terraform operations
 
-## Enable S3 Versioning
-
-Versioning allows recovery of previous versions of the Terraform state file.
-
-```bash
-aws s3api put-bucket-versioning \
---bucket devspace-aymen-terraform-state \
---versioning-configuration Status=Enabled
-```
-
----
-
-## Enable Server-Side Encryption
-
-The Terraform state can contain sensitive information, so encryption is enabled.
-
-```bash
-aws s3api put-bucket-encryption \
---bucket devspace-aymen-terraform-state \
---server-side-encryption-configuration \
-'{
-  "Rules": [
-    {
-      "ApplyServerSideEncryptionByDefault": {
-        "SSEAlgorithm": "AES256"
-      }
-    }
-  ]
-}'
-```
-
----
-
-# 2. Create DynamoDB Table for State Locking
-
-Terraform uses DynamoDB to lock the state during operations.
 
 Example:
 
-```
+```text
 terraform-state-lock
 ```
 
-Purpose:
-
-* Prevent multiple engineers from running Terraform at the same time.
-* Avoid conflicting infrastructure changes.
-* Protect the Terraform state consistency.
-
----
-
-## Create DynamoDB Lock Table
-
-```bash
-aws dynamodb create-table \
---table-name terraform-state-lock \
---attribute-definitions AttributeName=LockID,AttributeType=S \
---key-schema AttributeName=LockID,KeyType=HASH \
---billing-mode PAY_PER_REQUEST \
---region us-east-1
-```
-
----
-
-## Verify DynamoDB Table Status
-
-```bash
-aws dynamodb describe-table \
---table-name terraform-state-lock \
---query "Table.TableStatus"
-```
-
-Expected output:
+More details:
 
 ```text
-"ACTIVE"
+docs/REMOTE_STATE_SETUP.md
 ```
 
 ---
 
-# 3. Configure Terraform Backend
+# Ansible Configuration
 
-Create a file in the Terraform project:
+Ansible configures the EC2 instance after Terraform creates the infrastructure.
 
-```
-backend.tf
-```
+Tasks performed:
 
-Add:
+- Connect to EC2 using SSH
+- Install Nginx
+- Deploy Nginx configuration
+- Restart Nginx when configuration changes
+- Deploy website files
 
-```hcl
-terraform {
 
-  backend "s3" {
+Ansible structure:
 
-    bucket = "devspace-aymen-terraform-state"
+```text
+ansible/
 
-    key = "terraform.tfstate"
-
-    region = "us-east-1"
-
-    dynamodb_table = "terraform-state-lock"
-
-    encrypt = true
-
-  }
-
-}
+├── playbook.yml
+│
+└── roles/
+    └── nginx/
+        ├── tasks
+        ├── handlers
+        ├── templates
+        ├── vars
+        └── defaults
 ```
 
 ---
 
-# 4. Initialize Terraform with Remote Backend
+# Nginx Deployment
 
-Run:
+The Ansible Nginx role performs:
 
-```bash
-terraform init
+## Install Nginx
+
+Installs the Nginx web server on the EC2 instance.
+
+
+## Deploy Configuration
+
+Configuration file:
+
+```text
+/etc/nginx/conf.d/devspace.conf
 ```
 
-Terraform will:
+## Deploy Website
 
-* Connect to the S3 bucket.
-* Configure the remote backend.
-* Enable state locking through DynamoDB.
-* Migrate the state if a previous local state exists.
+Website file:
 
----
-
-# 5. Verify Remote State Configuration
-
-## Check Terraform State Resources
-
-```bash
-terraform state list
+```text
+/usr/share/nginx/html/index.html
 ```
 
 Example output:
 
 ```text
-module.network.aws_vpc.main
-module.network.aws_subnet.public[0]
-module.network.aws_subnet.public[1]
-module.compute.aws_instance.web
+🚀 Deployed with Terraform + Ansible
+
+Server: devspace.local
+
+This page was generated by Ansible.
 ```
 
 ---
 
-## Verify S3 Bucket Exists
+# Automated Deployment Script
+
+The `setup.sh` script automates the complete deployment process.
+
+It performs:
+
+1. Check required dependencies
+2. Install missing tools
+3. Create SSH key if missing
+4. Initialize Terraform
+5. Deploy AWS infrastructure
+6. Retrieve EC2 public IP
+7. Generate Ansible inventory automatically
+8. Run Ansible playbook
+9. Check Git changes
+10. Ask before committing and pushing changes
+
+
+Run:
 
 ```bash
-aws s3 ls
+chmod +x setup.sh
+
+./setup.sh
 ```
 
-Example:
+---
+
+# Repository Structure
 
 ```text
-2026-08-04 02:58:04 devspace-aymen-terraform-state
-```
+terraform-aws-infrastructure/
 
-The bucket should contain:
-
-```
-terraform.tfstate
-```
-
----
-
-# Remote State Architecture
-
-```
-                 Terraform
-                     |
-                     |
-                     v
-
-          +---------------------+
-          |        AWS S3       |
-          |                     |
-          |  terraform.tfstate  |
-          +---------------------+
-
-                     |
-                     |
-                     v
-
-          +---------------------+
-          |     DynamoDB        |
-          |                     |
-          | terraform-state-lock|
-          |                     |
-          +---------------------+
+├── modules/
+│   ├── network/
+│   └── compute/
+│
+├── ansible/
+│   ├── playbook.yml
+│   └── roles/
+│
+├── docs/
+│   └── REMOTE_STATE_SETUP.md
+│
+├── backend.tf
+├── main.tf
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── outputs.tf
+└── setup.sh
 ```
 
 ---
 
-# Final Workflow
+# Troubleshooting Examples
 
-```
-Create S3 Bucket
-        |
-        v
-Enable Versioning
-        |
-        v
-Enable Encryption
-        |
-        v
-Create DynamoDB Lock Table
-        |
-        v
-Create backend.tf
-        |
-        v
-terraform init
-        |
-        v
-terraform plan
-        |
-        v
-terraform apply
+During development, several real infrastructure issues were solved.
+
+## Terraform Availability Zone Issue
+
+### Problem
+
+Terraform selected AWS Wavelength Zones instead of normal Availability Zones.
+
+### Cause
+
+The AWS availability zone data source returned different zone types.
+
+### Solution
+
+The availability zone selection was restricted to standard AWS Availability Zones.
+
+---
+
+## Nginx Configuration Error
+
+### Problem
+
+```text
+server directive is not allowed here
 ```
 
+### Cause
+
+The server block was placed incorrectly inside:
+
+```text
+/etc/nginx/nginx.conf
+```
+
+### Solution
+
+The configuration was moved into:
+
+```text
+/etc/nginx/conf.d/devspace.conf
+```
+
+---
+
+## EC2 Public IP Changes
+
+### Problem
+
+When Terraform recreates an EC2 instance, AWS assigns a new public IP.
+
+### Solution
+
+The deployment script automatically retrieves the current IP:
+
+```bash
+terraform output -raw public_ip
+```
+
+and generates a new Ansible inventory file.
+
+---
+
+# Skills Demonstrated
+
+This project demonstrates practical experience with:
+
+- AWS infrastructure provisioning
+- Infrastructure as Code (Terraform)
+- Terraform modules
+- Terraform remote state
+- Terraform state locking
+- AWS networking
+- Linux administration
+- SSH automation
+- Configuration management with Ansible
+- Nginx deployment
+- Bash scripting
+- DevOps workflow automation
+
+---
+
+# Future Improvements
+
+Possible future enhancements:
+
+- Deploy applications using Docker
+- Add CI/CD pipeline using Jenkins or GitHub Actions
+- Add monitoring using Prometheus and Grafana
+- Add HTTPS with SSL certificates
+- Deploy containerized applications instead of static files
